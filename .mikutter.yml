@@ -1,0 +1,9 @@
+---
+slug: :mikutter_tdr
+depends:
+  mikutter: 3.4.7
+  plugin: []
+version: '1.0'
+author: yuzumone
+name: mikutter_tdr
+description: '夢の国の情報を表示'
