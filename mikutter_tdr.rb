@@ -7,6 +7,7 @@ Plugin.create(:mikutter_datasource_tdr) do
     begin
       datasources[:mikutter_tdl_greeting] = "TDR/TDL Greeting"
       datasources[:mikutter_tdl_attraction] = "TDR/TDL Attraction"
+      datasources[:mikutter_tds_greeting] = "TDR/TDS Greeting"
     rescue => e
       puts e
       puts e.backtrace
@@ -17,6 +18,7 @@ Plugin.create(:mikutter_datasource_tdr) do
 
   on_boot do
     fetch_tdl_greeting
+    fetch_tds_greeting
     update_tdl_attraction
     reserver_tdl_attraction
   end
@@ -64,6 +66,36 @@ Plugin.create(:mikutter_datasource_tdr) do
       end
     end
     Plugin.call(:extract_receive_message, :mikutter_tdl_greeting, msgs)
+  end
+
+  # TDSのショーの情報を取得
+  def fetch_tds_greeting
+    url = 'http://info.tokyodisneyresort.jp/s/daily_schedule/show/tds_' + today + '.html'
+    charset = nil
+    html = open(url) do |f|
+      charset = f.charset
+      f.read
+    end
+
+    msgs = []
+    doc = Nokogiri::HTML(html.toutf8, nil, 'utf-8')
+    greetings = doc.css('ul#greeting')
+    greeting_list = greetings.css('li')
+    greeting_list.each do |g|
+      name = g.css('h3').text.gsub(/(\s)/,"")
+      times = g.css('p.time').text
+      text = name + "\n" + times
+      if (/\d+:\d+/ === times)
+        time = times.match(/\d+:\d+/)[0]
+        msg = Message.new(:message => text , :system => true)
+        msg[:modified] = Time.parse(time)
+        user = User.new(:id => 3939, :idname => "TDS Greeting")
+        user[:profile_image_url] = File.join(File.dirname(__FILE__), "tds.png")
+        msg[:user] = user
+        msgs.push(msg)
+      end
+    end
+    Plugin.call(:extract_receive_message, :mikutter_tds_greeting, msgs)
   end
 
   # TDLアトラクションのアップデートを5分ごとに繰り返し実行
