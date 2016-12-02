@@ -100,12 +100,12 @@ Plugin.create(:mikutter_datasource_tdr) do
     Plugin.call(:extract_receive_message, :mikutter_tds_greeting, msgs)
   end
 
-  # TDLアトラクションのアップデートを5分ごとに繰り返し実行
+  # アトラクションのアップデートを5分ごとに繰り返し実行
   def reserver_attraction
     Reserver.new(300) {
       update_tdl_attraction
       update_tds_attraction
-      reserver_tdl_attraction
+      reserver_attraction
     }
   end
 
