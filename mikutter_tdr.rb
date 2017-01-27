@@ -1,36 +1,39 @@
 # -*- coding: utf-8 -*-
 
-Plugin.create(:mikutter_datasource_tdr) do
-  require 'kconv'
-  
+Plugin.create(:mikutter_tdr) do
+
+  require_relative 'model'
+  @saved_tdl_attractions ||= []
+  @saved_tds_attractions ||= []
+
   filter_extract_datasources { |datasources|
     begin
-      datasources[:mikutter_tdl_greeting] = "TDR/TDL Greeting"
-      datasources[:mikutter_tdl_attraction] = "TDR/TDL Attraction"
-      datasources[:mikutter_tds_greeting] = "TDR/TDS Greeting"
-      datasources[:mikutter_tds_attraction] = "TDR/TDS Attraction"
+      datasources[:mikutter_tdl_greeting] = 'TDR/TDL Greeting'
+      datasources[:mikutter_tdl_attraction] = 'TDR/TDL Attraction'
+      datasources[:mikutter_tds_greeting] = 'TDR/TDS Greeting'
+      datasources[:mikutter_tds_attraction] = 'TDR/TDS Attraction'
     rescue => e
       puts e
       puts e.backtrace
     end
-
     [datasources]
   }
 
   on_boot do
+    fetch_tdl_attraction
     fetch_tdl_greeting
+    fetch_tds_attraction
     fetch_tds_greeting
-    update_tdl_attraction
-    update_tds_attraction
     reserver_attraction
   end
 
   # 今日の日付
   def today
-    return Date.today.strftime("%Y%m%d")
+    return Date.today.strftime('%Y%m%d')
   end
 
   # リダイレクト先のURLを取得
+  # http://opentechnica.blogspot.jp/2012/10/rubyurlurl.html
   def get_content_with_redirection(url)
     client = HTTPClient.new
     def client.allow_all_redirection_callback(uri, res)
@@ -42,148 +45,178 @@ Plugin.create(:mikutter_datasource_tdr) do
 
   # TDLのショーの情報を取得
   def fetch_tdl_greeting
-    url = 'http://info.tokyodisneyresort.jp/s/daily_schedule/show/tdl_' + today + '.html'
-    charset = nil
-    html = open(url) do |f|
-      charset = f.charset
-      f.read
-    end
-
-    msgs = []
-    doc = Nokogiri::HTML(html.toutf8, nil, 'utf-8')
-    greetings = doc.css('ul#greeting')
-    greeting_list = greetings.css('li')
-    greeting_list.each do |g|
-      name = g.css('h3').text.gsub(/(\s)/,"")
-      times = g.css('p.time').text
-      text = name + "\n" + times
-      if (/\d+:\d+/ === times)
-        time = times.match(/\d+:\d+/)[0]
-        msg = Message.new(:message => text , :system => true)
-        msg[:modified] = Time.parse(time)
-        user = User.new(:id => 3939, :idname => "TDL Greeting")
-        user[:profile_image_url] = File.join(File.dirname(__FILE__), "tdl.png")
-        msg[:user] = user
-        msgs.push(msg)
+    Thread.new {
+      client = HTTPClient.new
+      url = 'http://info.tokyodisneyresort.jp/s/daily_schedule/show/tdl_' + today + '.html'
+      client.get(url)
+    }.next { |response|
+      charset = response.body_encoding.name
+      doc = Nokogiri::HTML.parse(response.content, nil, charset)
+      doc.xpath('//*[@id="greeting"]/li')
+    }.next { |doc|
+      [Plugin::TDR::Park.new(
+          name: '東京ディズニーランド パレード/ショー',
+          profile_image_url: File.join(File.dirname(__FILE__), 'tdl.png')
+      ), doc]
+    }.next { |park, doc|
+      doc.map do |greeting|
+        name = greeting.css('h3').text.gsub(/(\s)/, '')
+        times = greeting.css('p.time').text
+        link = greeting.css('a').attribute('href')
+        time = Time.new(Date.today.year, Date.today.mon, Date.today.day)
+        text = name + "\n" + times
+        if /\d+:\d+/ === times
+          time = times.match(/\d+:\d+/)[0]
+        end
+        Plugin::TDR::Greeting.new(
+            title: name,
+            text: text,
+            link: link,
+            created: Time.now,
+            modified: time,
+            park: park
+        )
       end
-    end
-    Plugin.call(:extract_receive_message, :mikutter_tdl_greeting, msgs)
+    }.next { |msgs|
+      Plugin.call :appear, msgs
+      Plugin.call :extract_receive_message, :mikutter_tdl_greeting, msgs
+    }.trap { |e| error e }
   end
 
   # TDSのショーの情報を取得
   def fetch_tds_greeting
-    url = 'http://info.tokyodisneyresort.jp/s/daily_schedule/show/tds_' + today + '.html'
-    charset = nil
-    html = open(url) do |f|
-      charset = f.charset
-      f.read
-    end
-
-    msgs = []
-    doc = Nokogiri::HTML(html.toutf8, nil, 'utf-8')
-    greetings = doc.css('ul#greeting')
-    greeting_list = greetings.css('li')
-    greeting_list.each do |g|
-      name = g.css('h3').text.gsub(/(\s)/,"")
-      times = g.css('p.time').text
-      text = name + "\n" + times
-      if (/\d+:\d+/ === times)
-        time = times.match(/\d+:\d+/)[0]
-        msg = Message.new(:message => text , :system => true)
-        msg[:modified] = Time.parse(time)
-        user = User.new(:id => 3939, :idname => "TDS Greeting")
-        user[:profile_image_url] = File.join(File.dirname(__FILE__), "tds.png")
-        msg[:user] = user
-        msgs.push(msg)
+    Thread.new {
+      client = HTTPClient.new
+      url = 'http://info.tokyodisneyresort.jp/s/daily_schedule/show/tds_' + today + '.html'
+      client.get(url)
+    }.next { |response|
+      charset = response.body_encoding.name
+      doc = Nokogiri::HTML.parse(response.content, nil, charset)
+      doc.xpath('//*[@id="greeting"]/li')
+    }.next { |doc|
+      [Plugin::TDR::Park.new(
+          name: '東京ディズニーシー パレード/ショー',
+          profile_image_url: File.join(File.dirname(__FILE__), 'tds.png')
+      ), doc]
+    }.next { |park, doc|
+      doc.map do |greeting|
+        name = greeting.css('h3').text.gsub(/(\s)/, '')
+        times = greeting.css('p.time').text
+        link = greeting.css('a').attribute('href')
+        time = Time.new(Date.today.year, Date.today.mon, Date.today.day)
+        text = name + "\n" + times
+        if /\d+:\d+/ === times
+          time = times.match(/\d+:\d+/)[0]
+        end
+        Plugin::TDR::Greeting.new(
+            title: name,
+            text: text,
+            link: link,
+            created: Time.now,
+            modified: time,
+            park: park
+        )
       end
-    end
-    Plugin.call(:extract_receive_message, :mikutter_tds_greeting, msgs)
+    }.next { |msgs|
+      Plugin.call :appear, msgs
+      Plugin.call :extract_receive_message, :mikutter_tds_greeting, msgs
+    }.trap { |e| error e }
   end
 
   # アトラクションのアップデートを5分ごとに繰り返し実行
   def reserver_attraction
     Reserver.new(300) {
-      update_tdl_attraction
-      update_tds_attraction
+      fetch_tdl_attraction
+      fetch_tds_attraction
       reserver_attraction
     }
   end
 
-  # TDLのアトラクションのメッセージをアップデート
-  def update_tdl_attraction
-    @saved_tdl_attractions ||= []
-    Plugin.call(:destroyed, @saved_tdl_attractions)
-    @saved_tdl_attractions = fetch_tdl_attraction
-    Plugin.call(:extract_receive_message, :mikutter_tdl_attraction, @saved_tdl_attractions)
-  end
-
   # TDLのアトラクションの情報を取得
   def fetch_tdl_attraction
-    msgs = []
-    count = 0
-    url = 'http://info.tokyodisneyresort.jp/rt/s/gps/tdl_index.html' +
+    Thread.new {
+      url = 'http://info.tokyodisneyresort.jp/rt/s/gps/tdl_index.html' +
           '?nextUrl=http://info.tokyodisneyresort.jp/rt/s/realtime/tdl_attraction.html' +
-          # 下の位置情報は馬鹿には見えない
           '&lat=35.6329527&lng=139.8840281'
-    html = get_content_with_redirection(url)
-    doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-    schedules = doc.css('ul#atrc.schedule')
-    list = schedules.css('li')
-    list.each do |s|
-      name = s.css('h3').text.gsub(/(\s)/,"")
-      wait_time = s.css('p.waitTime').text.gsub(/(\s)/,"")
-      run_time = s.css('p.run').text.gsub(/(\s)/,"")
-      fp_time = s.css('p.fp').text.gsub(/(\s)/,"")
-      text = name + "\n" + run_time
-      text = text + "\n待ち時間: " + wait_time unless(wait_time == "")
-      text = text + "\nFP: " + fp_time unless (fp_time == "")
-      msg = Message.new(:message => text , :system => true)
-      msg[:modified] = Time.now - count
-      count += 1
-      user = User.new(:id => 3939, :idname => "TDL Attraction")
-      user[:profile_image_url] = File.join(File.dirname(__FILE__), "tdl.png")
-      msg[:user] = user
-      msgs.push(msg)
-    end
-    return msgs
+      get_content_with_redirection(url)
+    }.next { |response|
+      doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
+      doc.css('ul#atrc.schedule').css('li')
+    }.next { |doc|
+      [Plugin::TDR::Park.new(
+          name: '東京ディズニーランド アトラクション',
+          profile_image_url: File.join(File.dirname(__FILE__), 'tdl.png')
+      ), doc]
+    }.next { |park, doc|
+      count = 0
+      doc.map do |attraction|
+        name = attraction.css('h3').text.gsub(/(\s)/, '')
+        wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
+        run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
+        fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
+        link = attraction.css('a').attribute('href')
+        text = name + "\n" + run_time
+        text = text + "\n待ち時間: " + wait_time if(wait_time != '')
+        text = text + "\nFP: " + fp_time if(fp_time != '')
+        count += 1
+        Plugin::TDR::Attraction.new(
+            title: name,
+            text: text,
+            link: link,
+            created: Time.now,
+            modified: Time.now - count,
+            park: park
+        )
+      end
+    }.next { |msgs|
+      Plugin.call :destroyed, @saved_tdl_attractions
+      Plugin.call :appear, msgs
+      Plugin.call :extract_receive_message, :mikutter_tdl_attraction, msgs
+      @saved_tdl_attractions = msgs
+    }.trap { |e| error e }
   end
 
-  # TDLのアトラクションのメッセージをアップデート
-  def update_tds_attraction
-    @saved_tds_attractions ||= []
-    Plugin.call(:destroyed, @saved_tds_attractions)
-    @saved_tds_attractions = fetch_tds_attraction
-    Plugin.call(:extract_receive_message, :mikutter_tds_attraction, @saved_tds_attractions)
-  end
-
-  # TDLのアトラクションの情報を取得
+  # TDSのアトラクションの情報を取得
   def fetch_tds_attraction
-    msgs = []
-    count = 0
-    url = 'http://info.tokyodisneyresort.jp/rt/s/gps/tds_index.html' +
+    Thread.new {
+      url = 'http://info.tokyodisneyresort.jp/rt/s/gps/tds_index.html' +
           '?nextUrl=http://info.tokyodisneyresort.jp/rt/s/realtime/tds_attraction.html' +
-          # 下の位置情報は馬鹿には見えない
           '&lat=35.6329527&lng=139.8840281'
-    html = get_content_with_redirection(url)
-    doc = Nokogiri::HTML.parse(html, nil, 'utf-8')
-    schedules = doc.css('ul#atrc.schedule')
-    list = schedules.css('li')
-    list.each do |s|
-      name = s.css('h3').text.gsub(/(\s)/,"")
-      wait_time = s.css('p.waitTime').text.gsub(/(\s)/,"")
-      run_time = s.css('p.run').text.gsub(/(\s)/,"")
-      fp_time = s.css('p.fp').text.gsub(/(\s)/,"")
-      text = name + "\n" + run_time
-      text = text + "\n待ち時間: " + wait_time unless(wait_time == "")
-      text = text + "\nFP: " + fp_time unless (fp_time == "")
-      msg = Message.new(:message => text , :system => true)
-      msg[:modified] = Time.now - count
-      count += 1
-      user = User.new(:id => 3939, :idname => "TDS Attraction")
-      user[:profile_image_url] = File.join(File.dirname(__FILE__), "tds.png")
-      msg[:user] = user
-      msgs.push(msg)
-    end
-    return msgs
+      get_content_with_redirection(url)
+    }.next { |response|
+      doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
+      doc.css('ul#atrc.schedule').css('li')
+    }.next { |doc|
+      [Plugin::TDR::Park.new(
+          name: '東京ディズニーシー アトラクション',
+          profile_image_url: File.join(File.dirname(__FILE__), 'tds.png')
+      ), doc]
+    }.next { |park, doc|
+      count = 0
+      doc.map do |attraction|
+        name = attraction.css('h3').text.gsub(/(\s)/, '')
+        wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
+        run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
+        fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
+        link = attraction.css('a').attribute('href')
+        text = name + "\n" + run_time
+        text = text + "\n待ち時間: " + wait_time if(wait_time != '')
+        text = text + "\nFP: " + fp_time if(fp_time != '')
+        count += 1
+        Plugin::TDR::Attraction.new(
+            title: name,
+            text: text,
+            link: link,
+            created: Time.now,
+            modified: Time.now - count,
+            park: park
+        )
+      end
+    }.next { |msgs|
+      Plugin.call :destroyed, @saved_tds_attractions
+      Plugin.call :appear, msgs
+      Plugin.call :extract_receive_message, :mikutter_tds_attraction, msgs
+      @saved_tds_attractions = msgs
+    }.trap { |e| error e }
   end
 end
