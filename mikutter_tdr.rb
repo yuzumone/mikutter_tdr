@@ -148,26 +148,40 @@ Plugin.create(:mikutter_tdr) do
           profile_image_url: File.join(File.dirname(__FILE__), 'tdl.png')
       ), doc]
     }.next { |park, doc|
+      msgs = []
       count = 0
-      doc.map do |attraction|
-        name = attraction.css('h3').text.gsub(/(\s)/, '')
-        wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
-        run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
-        fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-        link = attraction.css('a').attribute('href')
-        text = name + "\n" + run_time
-        text = text + "\n待ち時間: " + wait_time if(wait_time != '')
-        text = text + "\nFP: " + fp_time if(fp_time != '')
-        count += 1
-        Plugin::TDR::Attraction.new(
-            title: name,
-            text: text,
-            link: link,
+      if doc.empty?
+        msg = Plugin::TDR::Attraction.new(
+            title: 'ただいま東京ディズニーランドは、閉園しております。',
+            text: 'ただいま東京ディズニーランドは、閉園しております。',
+            link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
             created: Time.now,
-            modified: Time.now - count,
-            park: park
-        )
+            modified: Time.now,
+            park: park)
+        msgs.push(msg)
+      else
+        doc.each do |attraction|
+          name = attraction.css('h3').text.gsub(/(\s)/, '')
+          wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
+          run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
+          fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
+          link = attraction.css('a').attribute('href')
+          text = name + "\n" + run_time
+          text = text + "\n待ち時間: " + wait_time if(wait_time != '')
+          text = text + "\nFP: " + fp_time if(fp_time != '')
+          count += 1
+          msg = Plugin::TDR::Attraction.new(
+              title: name,
+              text: text,
+              link: link,
+              created: Time.now,
+              modified: Time.now - count,
+              park: park
+          )
+          msgs.push(msg)
+        end
       end
+      msgs
     }.next { |msgs|
       Plugin.call :destroyed, @saved_tdl_attractions
       Plugin.call :appear, msgs
@@ -192,26 +206,41 @@ Plugin.create(:mikutter_tdr) do
           profile_image_url: File.join(File.dirname(__FILE__), 'tds.png')
       ), doc]
     }.next { |park, doc|
+      msgs = []
       count = 0
-      doc.map do |attraction|
-        name = attraction.css('h3').text.gsub(/(\s)/, '')
-        wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
-        run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
-        fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-        link = attraction.css('a').attribute('href')
-        text = name + "\n" + run_time
-        text = text + "\n待ち時間: " + wait_time if(wait_time != '')
-        text = text + "\nFP: " + fp_time if(fp_time != '')
-        count += 1
-        Plugin::TDR::Attraction.new(
-            title: name,
-            text: text,
-            link: link,
+      if doc.empty?
+        msg = Plugin::TDR::Attraction.new(
+            title: 'ただいま東京ディズニーシーは、閉園しております。',
+            text: 'ただいま東京ディズニーシーは、閉園しております。',
+            link: 'http://info.tokyodisneyresort.jp/s/calendar/tds/',
             created: Time.now,
-            modified: Time.now - count,
+            modified: Time.now,
             park: park
         )
+        msgs.push(msg)
+      else
+        doc.each do |attraction|
+          name = attraction.css('h3').text.gsub(/(\s)/, '')
+          wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
+          run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
+          fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
+          link = attraction.css('a').attribute('href')
+          text = name + "\n" + run_time
+          text = text + "\n待ち時間: " + wait_time if(wait_time != '')
+          text = text + "\nFP: " + fp_time if(fp_time != '')
+          count += 1
+          msg = Plugin::TDR::Attraction.new(
+              title: name,
+              text: text,
+              link: link,
+              created: Time.now,
+              modified: Time.now - count,
+              park: park
+          )
+          msgs.push(msg)
+        end
       end
+      msgs
     }.next { |msgs|
       Plugin.call :destroyed, @saved_tds_attractions
       Plugin.call :appear, msgs

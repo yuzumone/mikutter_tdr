@@ -4,7 +4,11 @@ module Plugin::TDR
   class Attraction < Retriever::Model
     include Retriever::Model::MessageMixin
 
-    register :mikutter_tdr_attraction
+    register :mikutter_tdr_attraction,
+             name:'TDR Attraction',
+             timeline: true,
+             reply: false,
+             myself: false
     
     field.string :title, required: true
     field.string :text
