@@ -2,16 +2,18 @@
 
 Plugin.create(:mikutter_tdr) do
 
+  require 'rss'
   require_relative 'model'
   @saved_tdl_attractions ||= []
   @saved_tds_attractions ||= []
 
   filter_extract_datasources { |datasources|
     begin
-      datasources[:mikutter_tdl_greeting] = 'TDR/TDL Greeting'
-      datasources[:mikutter_tdl_attraction] = 'TDR/TDL Attraction'
-      datasources[:mikutter_tds_greeting] = 'TDR/TDS Greeting'
-      datasources[:mikutter_tds_attraction] = 'TDR/TDS Attraction'
+      datasources[:mikutter_tdl_greeting] = 'TDR/ディズニーランドパレード'
+      datasources[:mikutter_tdl_attraction] = 'TDR/ディズニーランドアトラクション'
+      datasources[:mikutter_tds_greeting] = 'TDR/ディズニーシーパレード'
+      datasources[:mikutter_tds_attraction] = 'TDR/ディズニーシーアトラクション'
+      datasources[:mikutter_tdr_weather] = 'TDR/舞浜の天気'
     rescue => e
       puts e
       puts e.backtrace
@@ -25,6 +27,7 @@ Plugin.create(:mikutter_tdr) do
     fetch_tds_attraction
     fetch_tds_greeting
     reserver_attraction
+    weather
   end
 
   # 今日の日付
@@ -246,6 +249,35 @@ Plugin.create(:mikutter_tdr) do
       Plugin.call :appear, msgs
       Plugin.call :extract_receive_message, :mikutter_tds_attraction, msgs
       @saved_tds_attractions = msgs
+    }.trap { |e| error e }
+  end
+
+  # 天気情報を取得
+  def weather
+    Thread.new {
+      rss = RSS::Parser.parse('https://rss-weather.yahoo.co.jp/rss/days/4510.xml')
+      rss.items.reject { |item| item.description == '注意報があります' }
+    }.next { |items|
+      msgs = []
+      items.each_with_index do |item, i|
+        site = Plugin::TDR::Site.new(
+            name: item.title.match(/【.+?】/),
+            profile_image_url: File.join(File.dirname(__FILE__), 'weather.png')
+        )
+        weather = Plugin::TDR::Weather.new(
+            title: item.title,
+            text: item.description,
+            link: item.link,
+            created: Time.now,
+            modified: Time.now - i,
+            site: site
+        )
+        msgs.push(weather)
+      end
+      msgs
+    }.next { |msgs|
+      Plugin.call :appear, msgs
+      Plugin.call :extract_receive_message, :mikutter_tdr_weather, msgs
     }.trap { |e| error e }
   end
 end
