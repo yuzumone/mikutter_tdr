@@ -5,7 +5,8 @@
 - パレード・ショーのスケジュール
 - アトラクションの運営状況・待ち時間
 - ファストパス発券状況
-- 天気情報
+- レストラン情報
+- 天気予報
 
 ## 表示例
 **パレード**  
@@ -14,10 +15,15 @@
 **アトラクション**  
 ![attraction](./screenshot/attraction.png)
 
+**レストラン**  
+![restaurant](./screenshot/restaurant.png)
+
+**天気予報**  
+![weather](./screenshot/weather.png)
+
 ## 今後の対応予定
 - 開園スケジュール
 - キャラクターグリーティング
-- レストラン情報
 
 ## インストール
 ```shell
