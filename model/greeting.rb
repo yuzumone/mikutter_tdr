@@ -26,7 +26,7 @@ module Plugin::TDR
     end
 
     def perma_link
-      link
+      link || nil
     end
   end
 end

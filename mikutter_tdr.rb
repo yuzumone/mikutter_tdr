@@ -72,20 +72,22 @@ Plugin.create(:mikutter_tdr) do
       doc.map do |greeting|
         name = greeting.css('h3').text.gsub(/(\s)/, '')
         times = greeting.css('p.time').text
-        link = greeting.css('a').attribute('href')
         time = Time.new(Date.today.year, Date.today.mon, Date.today.day)
         text = name + "\n" + times
         if /\d+:\d+/ === times
           time = times.match(/\d+:\d+/)[0]
         end
-        Plugin::TDR::Greeting.new(
+        msg = Plugin::TDR::Greeting.new(
             title: name,
             text: text,
-            link: link,
             created: Time.now,
             modified: time,
             park: park
         )
+        unless greeting.css('a').empty?
+          msg.link = greeting.css('a').attribute('href')
+        end
+        msg
       end
     }.next { |msgs|
       Plugin.call :appear, msgs
@@ -112,20 +114,22 @@ Plugin.create(:mikutter_tdr) do
       doc.map do |greeting|
         name = greeting.css('h3').text.gsub(/(\s)/, '')
         times = greeting.css('p.time').text
-        link = greeting.css('a').attribute('href')
         time = Time.new(Date.today.year, Date.today.mon, Date.today.day)
         text = name + "\n" + times
         if /\d+:\d+/ === times
           time = times.match(/\d+:\d+/)[0]
         end
-        Plugin::TDR::Greeting.new(
+        msg = Plugin::TDR::Greeting.new(
             title: name,
             text: text,
-            link: link,
             created: Time.now,
             modified: time,
             park: park
         )
+        unless greeting.css('a').empty?
+          msg.link = greeting.css('a').attribute('href')
+        end
+        msg
       end
     }.next { |msgs|
       Plugin.call :appear, msgs
