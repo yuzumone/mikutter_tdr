@@ -179,7 +179,6 @@ Plugin.create(:mikutter_tdr) do
           wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
           run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
           fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-          link = attraction.css('a').attribute('href')
           text = name + "\n" + run_time
           text = text + "\n待ち時間: " + wait_time if(wait_time != '')
           text = text + "\nFP: " + fp_time if(fp_time != '')
@@ -187,11 +186,13 @@ Plugin.create(:mikutter_tdr) do
           msg = Plugin::TDR::Attraction.new(
               title: name,
               text: text,
-              link: link,
               created: Time.now,
               modified: Time.now - count,
               park: park
           )
+          unless attraction.css('a').empty?
+            msg.link = attraction.css('a').attribute('href')
+          end
           msgs.push(msg)
         end
       end
@@ -238,7 +239,6 @@ Plugin.create(:mikutter_tdr) do
           wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
           run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
           fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-          link = attraction.css('a').attribute('href')
           text = name + "\n" + run_time
           text = text + "\n待ち時間: " + wait_time if(wait_time != '')
           text = text + "\nFP: " + fp_time if(fp_time != '')
@@ -246,11 +246,13 @@ Plugin.create(:mikutter_tdr) do
           msg = Plugin::TDR::Attraction.new(
               title: name,
               text: text,
-              link: link,
               created: Time.now,
               modified: Time.now - count,
               park: park
           )
+          unless attraction.css('a').empty?
+            msg.link = attraction.css('a').attribute('href')
+          end
           msgs.push(msg)
         end
       end
