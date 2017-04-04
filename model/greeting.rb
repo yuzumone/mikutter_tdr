@@ -10,15 +10,15 @@ module Plugin::TDR
              reply: false,
              myself: false
 
-    field.string :title, required: true
-    field.string :text
+    field.string :name, required: true
+    field.string :times
     field.string :link
     field.time   :created
     field.time   :modified
     field.has    :park, Plugin::TDR::Park, required: true
 
     def to_show
-      text
+      "#{name}\n#{times}"
     end
 
     def user

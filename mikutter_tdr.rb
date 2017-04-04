@@ -73,13 +73,13 @@ Plugin.create(:mikutter_tdr) do
         name = greeting.css('h3').text.gsub(/(\s)/, '')
         times = greeting.css('p.time').text
         time = Time.new(Date.today.year, Date.today.mon, Date.today.day)
-        text = name + "\n" + times
         if /\d+:\d+/ === times
           time = times.match(/\d+:\d+/)[0]
         end
         msg = Plugin::TDR::Greeting.new(
             title: name,
-            text: text,
+            name: name,
+            times: times,
             created: Time.now,
             modified: time,
             park: park
@@ -115,13 +115,13 @@ Plugin.create(:mikutter_tdr) do
         name = greeting.css('h3').text.gsub(/(\s)/, '')
         times = greeting.css('p.time').text
         time = Time.new(Date.today.year, Date.today.mon, Date.today.day)
-        text = name + "\n" + times
         if /\d+:\d+/ === times
           time = times.match(/\d+:\d+/)[0]
         end
         msg = Plugin::TDR::Greeting.new(
             title: name,
-            text: text,
+            name: name,
+            times: times,
             created: Time.now,
             modified: time,
             park: park
@@ -163,31 +163,27 @@ Plugin.create(:mikutter_tdr) do
       ), doc]
     }.next { |park, doc|
       msgs = []
-      count = 0
       if doc.empty?
         msg = Plugin::TDR::Attraction.new(
-            title: 'ただいま東京ディズニーランドは、閉園しております。',
-            text: 'ただいま東京ディズニーランドは、閉園しております。',
+            name: 'ただいま東京ディズニーランドは、閉園しております。',
             link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
             created: Time.now,
             modified: Time.now,
             park: park)
         msgs.push(msg)
       else
-        doc.each do |attraction|
+        doc.each_with_index do |attraction, i|
           name = attraction.css('h3').text.gsub(/(\s)/, '')
           wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
           run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
           fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-          text = name + "\n" + run_time
-          text = text + "\n待ち時間: " + wait_time if(wait_time != '')
-          text = text + "\nFP: " + fp_time if(fp_time != '')
-          count += 1
           msg = Plugin::TDR::Attraction.new(
-              title: name,
-              text: text,
+              name: name,
+              wait_time: wait_time,
+              run_time: run_time,
+              fp_time: fp_time,
               created: Time.now,
-              modified: Time.now - count,
+              modified: Time.now - i,
               park: park
           )
           unless attraction.css('a').empty?
@@ -222,11 +218,9 @@ Plugin.create(:mikutter_tdr) do
       ), doc]
     }.next { |park, doc|
       msgs = []
-      count = 0
       if doc.empty?
         msg = Plugin::TDR::Attraction.new(
-            title: 'ただいま東京ディズニーシーは、閉園しております。',
-            text: 'ただいま東京ディズニーシーは、閉園しております。',
+            name: 'ただいま東京ディズニーシーは、閉園しております。',
             link: 'http://info.tokyodisneyresort.jp/s/calendar/tds/',
             created: Time.now,
             modified: Time.now,
@@ -234,20 +228,18 @@ Plugin.create(:mikutter_tdr) do
         )
         msgs.push(msg)
       else
-        doc.each do |attraction|
+        doc.each_with_index do |attraction, i|
           name = attraction.css('h3').text.gsub(/(\s)/, '')
           wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
           run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
           fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-          text = name + "\n" + run_time
-          text = text + "\n待ち時間: " + wait_time if(wait_time != '')
-          text = text + "\nFP: " + fp_time if(fp_time != '')
-          count += 1
           msg = Plugin::TDR::Attraction.new(
-              title: name,
-              text: text,
+              name: name,
+              wait_time: wait_time,
+              run_time: run_time,
+              fp_time: fp_time,
               created: Time.now,
-              modified: Time.now - count,
+              modified: Time.now - i,
               park: park
           )
           unless attraction.css('a').empty?
@@ -293,8 +285,7 @@ Plugin.create(:mikutter_tdr) do
       msgs = []
       if doc.empty?
         msg = Plugin::TDR::Restaurant.new(
-            title: 'ただいま東京ディズニーランドは、閉園しております。',
-            text: 'ただいま東京ディズニーランドは、閉園しております。',
+            name: 'ただいま東京ディズニーランドは、閉園しております。',
             link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
             created: Time.now,
             modified: Time.now,
@@ -307,15 +298,13 @@ Plugin.create(:mikutter_tdr) do
           wait_time = restaurant.css('div.time').text.gsub(/(\s)/, '')
           op_left = restaurant.css('div.op-left').text.gsub(/(\s)/, '')
           op_right = restaurant.css('div.op-right').text.gsub(/(\s)/, '')
-          run = restaurant.css('p.run').text.gsub(/(\s)/, '')
-          text = name
-          text = text + "\n" + run if(run != '')
-          text = text + "\n" + op_left if(op_left != '')
-          text = text + "\n" + op_right if(op_right != '')
-          text = text + "\n" + wait_time if(wait_time != '')
+          run_time = restaurant.css('p.run').text.gsub(/(\s)/, '')
           msg = Plugin::TDR::Restaurant.new(
-              title: name,
-              text: text,
+              name: name,
+              wait_time: wait_time,
+              op_left: op_left,
+              op_right: op_right,
+              run_time: run_time,
               created: Time.now,
               modified: Time.now - i,
               park: park
@@ -354,8 +343,7 @@ Plugin.create(:mikutter_tdr) do
       msgs = []
       if doc.empty?
         msg = Plugin::TDR::Restaurant.new(
-            title: 'ただいま東京ディズニーシーは、閉園しております。',
-            text: 'ただいま東京ディズニーシーは、閉園しております。',
+            name: 'ただいま東京ディズニーシーは、閉園しております。',
             link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
             created: Time.now,
             modified: Time.now,
@@ -368,15 +356,13 @@ Plugin.create(:mikutter_tdr) do
           wait_time = restaurant.css('div.time').text.gsub(/(\s)/, '')
           op_left = restaurant.css('div.op-left').text.gsub(/(\s)/, '')
           op_right = restaurant.css('div.op-right').text.gsub(/(\s)/, '')
-          run = restaurant.css('p.run').text.gsub(/(\s)/, '')
-          text = name
-          text = text + "\n" + run if(run != '')
-          text = text + "\n" + op_left if(op_left != '')
-          text = text + "\n" + op_right if(op_right != '')
-          text = text + "\n" + wait_time if(wait_time != '')
+          run_time = restaurant.css('p.run').text.gsub(/(\s)/, '')
           msg = Plugin::TDR::Restaurant.new(
-              title: name,
-              text: text,
+              name: name,
+              wait_time: wait_time,
+              op_left: op_left,
+              op_right: op_right,
+              run_time: run_time,
               created: Time.now,
               modified: Time.now - i,
               park: park
