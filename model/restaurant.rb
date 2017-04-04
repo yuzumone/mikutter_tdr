@@ -10,14 +10,22 @@ module Plugin::TDR
              reply: false,
              myself: false
 
-    field.string :title, required: true
-    field.string :text
+    field.string :name, required: true
+    field.string :run_time
+    field.string :op_left
+    field.string :op_right
+    field.string :wait_time
     field.string :link
     field.time   :created
     field.time   :modified
     field.has    :park, Plugin::TDR::Park, required: true
 
     def to_show
+      text = name
+      text = text + "\n" + run_time unless run_time.empty?
+      text = text + "\n" + op_left unless op_left.empty?
+      text = text + "\n" + op_right unless op_right.empty?
+      text = text + "\n" + wait_time unless wait_time.empty?
       text
     end
 
