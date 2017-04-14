@@ -54,7 +54,6 @@ module Plugin::TDR
         else
           msgs = create_message park, doc
         end
-        p msgs
         msgs
       }.next { |msgs|
         Plugin.call :destroyed, @saved_tdl_attractions
