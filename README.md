@@ -6,6 +6,7 @@
 - アトラクションの運営状況・待ち時間
 - ファストパス発券状況
 - レストラン情報
+- 停止施設情報（リハブ）
 - 天気予報
 
 ## 表示例
@@ -17,6 +18,9 @@
 
 **レストラン**  
 ![restaurant](./screenshot/restaurant.png)
+
+**リハブ**  
+![rehab](./screenshot/rehab.png)
 
 **天気予報**  
 ![weather](./screenshot/weather.png)
