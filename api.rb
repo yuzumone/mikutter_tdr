@@ -2,6 +2,7 @@
 
 require_relative 'api/attraction_api'
 require_relative 'api/greeting_api'
+require_relative 'api/character_api'
 require_relative 'api/restaurant_api'
 require_relative 'api/rehab_api'
 require_relative 'api/weather_api'
