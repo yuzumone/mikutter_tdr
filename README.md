@@ -5,6 +5,7 @@
 - パレード・ショーのスケジュール
 - アトラクションの運営状況・待ち時間
 - ファストパス発券状況
+- キャラクターグリーティング情報
 - レストラン情報
 - 停止施設情報（リハブ）
 - 天気予報
@@ -16,6 +17,9 @@
 **アトラクション**  
 ![attraction](./screenshot/attraction.png)
 
+**キャラクターグリーティング**  
+![character](./screenshot/character.png)
+
 **レストラン**  
 ![restaurant](./screenshot/restaurant.png)
 
@@ -24,10 +28,6 @@
 
 **天気予報**  
 ![weather](./screenshot/weather.png)
-
-## 今後の対応予定
-- 開園スケジュール
-- キャラクターグリーティング
 
 ## インストール
 ```shell
