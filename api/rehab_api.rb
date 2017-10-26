@@ -21,7 +21,7 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response.content, nil, charset)
         doc.xpath('//*[@id="main"]/div/div/section[1]/dl').css('li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーランド リハブ情報',
             profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
         ), doc]
@@ -44,7 +44,7 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response.content, nil, charset)
         doc.xpath('//*[@id="main"]/div/div/section[2]/dl').css('li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーシー リハブ情報',
             profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
         ), doc]
@@ -60,12 +60,12 @@ module Plugin::TDR
       doc.map.with_index do |rehab, i|
         name = rehab.css('a').inner_text != '' ? rehab.css('a').inner_text : rehab.css('p').text
         date = rehab.css('span').text
-        Plugin::TDR::Rehab.new(
+        Plugin::TDR::Information.new(
             name: name,
-            date: date,
+            text: "#{name}\n#{date}",
             created: Time.now,
             modified: Time.now - i,
-            park: park
+            user: park
         )
       end
     end

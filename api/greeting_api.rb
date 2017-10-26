@@ -21,7 +21,7 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response.content, nil, charset)
         doc.xpath('//*[@id="greeting"]/li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーランド パレード/ショー',
             profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
         ), doc]
@@ -44,7 +44,7 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response.content, nil, charset)
         doc.xpath('//*[@id="greeting"]/li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーシー パレード/ショー',
             profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
         ), doc]
@@ -64,13 +64,12 @@ module Plugin::TDR
         if /\d+:\d+/ === times
           time = times.match(/\d+:\d+/)[0]
         end
-        msg = Plugin::TDR::Greeting.new(
-            title: name,
+        msg = Plugin::TDR::Information.new(
             name: name,
-            times: times,
+            text: "#{name}\n#{times}",
             created: Time.now,
             modified: time,
-            park: park
+            user: park
         )
         unless greeting.css('a').empty?
           msg.link = greeting.css('a').attribute('href')

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 module Plugin::TDR
-  class Park < Retriever::Model
+  class User < Retriever::Model
     include Retriever::Model::UserMixin
 
     field.string :name, required: true
