@@ -37,19 +37,20 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
         doc.css('ul#restaurant.schedule').css('li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーランド レストラン',
             profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
         ), doc]
       }.next { |park, doc|
         msgs = []
         if doc.empty?
-          msg = Plugin::TDR::Restaurant.new(
-              name: 'ただいま東京ディズニーランドは、閉園しております。',
+          msg = Plugin::TDR::Information.new(
+              name: '閉園',
+              text: 'ただいま東京ディズニーランドは、閉園しております。',
               link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
               created: Time.now,
               modified: Time.now,
-              park: park
+              user: park
           )
           msgs.push(msg)
         else
@@ -75,19 +76,20 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
         doc.css('ul#restaurant.schedule').css('li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーシー レストラン',
             profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
         ), doc]
       }.next { |park, doc|
         msgs = []
         if doc.empty?
-          msg = Plugin::TDR::Restaurant.new(
-              name: 'ただいま東京ディズニーシーは、閉園しております。',
+          msg = Plugin::TDR::Information.new(
+              name: '閉園',
+              text: 'ただいま東京ディズニーシーは、閉園しております。',
               link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
               created: Time.now,
               modified: Time.now,
-              park: park
+              user: park
           )
           msgs.push(msg)
         else
@@ -109,15 +111,17 @@ module Plugin::TDR
         op_left = restaurant.css('div.op-left').text.gsub(/(\s)/, '')
         op_right = restaurant.css('div.op-right').text.gsub(/(\s)/, '')
         run_time = restaurant.css('p.run').text.gsub(/(\s)/, '')
-        msg = Plugin::TDR::Restaurant.new(
+        text = name
+        text = text + "\n" + run_time unless run_time.empty?
+        text = text + "\n" + op_left unless op_left.empty?
+        text = text + "\n" + op_right unless op_right.empty?
+        text = text + "\n" + wait_time unless wait_time.empty?
+        msg = Plugin::TDR::Information.new(
             name: name,
-            wait_time: wait_time,
-            op_left: op_left,
-            op_right: op_right,
-            run_time: run_time,
+            text: text,
             created: Time.now,
             modified: Time.now - i,
-            park: park
+            user: park
         )
         unless restaurant.css('a').empty?
           msg.link = restaurant.css('a').attribute('href')

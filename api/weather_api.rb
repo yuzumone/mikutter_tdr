@@ -12,17 +12,17 @@ module Plugin::TDR
       }.next { |items|
         msgs = []
         items.each_with_index do |item, i|
-          site = Plugin::TDR::Site.new(
+          user = Plugin::TDR::User.new(
               name: item.title.match(/【.+?】/),
               profile_image_url: File.join(File.dirname(__FILE__), '../weather.png')
           )
-          weather = Plugin::TDR::Weather.new(
-              title: item.title,
+          weather = Plugin::TDR::Information.new(
+              name: item.title,
               text: item.description,
               link: item.link,
               created: Time.now,
               modified: Time.now - i,
-              site: site
+              user: user
           )
           msgs.push(weather)
         end

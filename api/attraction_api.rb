@@ -37,19 +37,20 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
         doc.css('ul#atrc.schedule').css('li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーランド アトラクション',
             profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
         ), doc]
       }.next { |park, doc|
         msgs = []
         if doc.empty?
-          msg = Plugin::TDR::Attraction.new(
-              name: 'ただいま東京ディズニーランドは、閉園しております。',
+          msg = Plugin::TDR::Information.new(
+              name: '閉園',
+              text: 'ただいま東京ディズニーランドは、閉園しております。',
               link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
               created: Time.now,
               modified: Time.now,
-              park: park)
+              user: park)
           msgs.push(msg)
         else
           msgs = create_message park, doc
@@ -74,19 +75,20 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
         doc.css('ul#atrc.schedule').css('li')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーシー アトラクション',
             profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
         ), doc]
       }.next { |park, doc|
         msgs = []
         if doc.empty?
-          msg = Plugin::TDR::Attraction.new(
-              name: 'ただいま東京ディズニーシーは、閉園しております。',
+          msg = Plugin::TDR::Information.new(
+              name: '閉園',
+              text: 'ただいま東京ディズニーシーは、閉園しております。',
               link: 'http://info.tokyodisneyresort.jp/s/calendar/tds/',
               created: Time.now,
               modified: Time.now,
-              park: park
+              user: park
           )
           msgs.push(msg)
         else
@@ -107,14 +109,16 @@ module Plugin::TDR
         wait_time = attraction.css('p.waitTime').text.gsub(/(\s)/, '')
         run_time = attraction.css('p.run').text.gsub(/(\s)/, '')
         fp_time = attraction.css('p.fp').text.gsub(/(\s)/, '')
-        msg = Plugin::TDR::Attraction.new(
+        text = name
+        text = text + "\n" + run_time unless run_time.empty?
+        text = text + "\n待ち時間: " + wait_time unless wait_time.empty?
+        text = text + "\nFP: " + fp_time unless fp_time.empty?
+        msg = Plugin::TDR::Information.new(
             name: name,
-            wait_time: wait_time,
-            run_time: run_time,
-            fp_time: fp_time,
+            text: text,
             created: Time.now,
             modified: Time.now - i,
-            park: park
+            user: park
         )
         unless attraction.css('a').empty?
           msg.link = attraction.css('a').attribute('href')
