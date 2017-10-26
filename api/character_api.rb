@@ -37,19 +37,20 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
         doc.xpath('//article[@class="run clearfix greeting"]')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーランド キャラクターグリーティング',
             profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
         ), doc]
       }.next { |park, doc|
         msgs = []
         if doc.empty?
-          msg = Plugin::TDR::Attraction.new(
-              name: 'ただいま東京ディズニーランドは、閉園しております。',
+          msg = Plugin::TDR::Information.new(
+              name: '閉園',
+              text: 'ただいま東京ディズニーランドは、閉園しております。',
               link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
               created: Time.now,
               modified: Time.now,
-              park: park)
+              user: park)
           msgs.push(msg)
         else
           msgs = create_message park, doc
@@ -74,19 +75,20 @@ module Plugin::TDR
         doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
         doc.xpath('//article[@class="run clearfix greeting"]')
       }.next { |doc|
-        [Plugin::TDR::Park.new(
+        [Plugin::TDR::User.new(
             name: '東京ディズニーシー キャラクターグリーティング',
             profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
         ), doc]
       }.next { |park, doc|
         msgs = []
         if doc.empty?
-          msg = Plugin::TDR::Attraction.new(
-              name: 'ただいま東京ディズニーシーは、閉園しております。',
+          msg = Plugin::TDR::Information.new(
+              name: '閉園',
+              text: 'ただいま東京ディズニーシーは、閉園しております。',
               link: 'http://info.tokyodisneyresort.jp/s/calendar/tds/',
               created: Time.now,
               modified: Time.now,
-              park: park
+              user: park
           )
           msgs.push(msg)
         else
@@ -108,13 +110,14 @@ module Plugin::TDR
         op_left = character.css('div.op-left')
         op_right = character.css('div.op-right')
         op = op_left.zip(op_right).map{|left, right| "#{left.text.gsub(/(\s)/, '')}: #{right.text.gsub(/(\s)/, '')}"}.join("\n")
-        msg = Plugin::TDR::Character.new(
+        text = name
+        text = text + "\n待ち時間: " + wait_time unless wait_time.empty?
+        msg = Plugin::TDR::Information.new(
             name: name,
-            wait_time: wait_time,
-            op: op,
+            text: "#{text}\n#{op}",
             created: Time.now,
             modified: Time.now - i,
-            park: park
+            user: park
         )
         unless character.css('a').empty?
           msg.link = character.css('a').attribute('href')
