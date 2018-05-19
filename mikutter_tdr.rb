@@ -35,14 +35,6 @@ Plugin.create(:mikutter_tdr) do
     end
     attraction = Plugin::TDR::AttractionAPI.new
     attraction.start
-    restaurant = Plugin::TDR::RestaurantAPI.new
-    restaurant.start
-    greeting = Plugin::TDR::GreetingAPI.new
-    greeting.start
-    character = Plugin::TDR::CharacterAPI.new
-    character.start
-    rehab = Plugin::TDR::RehabAPI.new
-    rehab.start
     weather = Plugin::TDR::WeatherAPI.new
     weather.start
   end
