@@ -7,14 +7,14 @@ Plugin.create(:mikutter_tdr) do
 
   filter_extract_datasources { |datasources|
     begin
-      datasources[:mikutter_tdl_greeting] = 'TDR/ディズニーランドパレード'
+      datasources[:mikutter_tdl_show] = 'TDR/ディズニーランドパレード'
       datasources[:mikutter_tdl_attraction] = 'TDR/ディズニーランドアトラクション'
-      datasources[:mikutter_tdl_character] = 'TDR/ディズニーランドキャラクターグリーティング'
+      datasources[:mikutter_tdl_greeting] = 'TDR/ディズニーランドキャラクターグリーティング'
       datasources[:mikutter_tdl_restaurant] ='TDR/ディズニーランドレストラン'
       datasources[:mikutter_tdl_rehab] = 'TDR/ディズニーランドリハブ'
-      datasources[:mikutter_tds_greeting] = 'TDR/ディズニーシーパレード'
+      datasources[:mikutter_tds_show] = 'TDR/ディズニーシーパレード'
       datasources[:mikutter_tds_attraction] = 'TDR/ディズニーシーアトラクション'
-      datasources[:mikutter_tds_character] = 'TDR/ディズニーシーキャラクターグリーティング'
+      datasources[:mikutter_tds_greeting] = 'TDR/ディズニーシーキャラクターグリーティング'
       datasources[:mikutter_tds_restaurant] = 'TDR/ディズニーシーレストラン'
       datasources[:mikutter_tds_rehab] = 'TDR/ディズニシーリハブ'
       datasources[:mikutter_tdr_weather] = 'TDR/舞浜の天気'
