@@ -35,6 +35,8 @@ Plugin.create(:mikutter_tdr) do
     end
     attraction = Plugin::TDR::AttractionAPI.new
     attraction.start
+    show = Plugin::TDR::ShowAPI.new
+    show.start
     weather = Plugin::TDR::WeatherAPI.new
     weather.start
   end
