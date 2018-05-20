@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 require_relative 'api/attraction_api'
-require_relative 'api/greeting_api'
+require_relative 'api/show_api'
 require_relative 'api/character_api'
 require_relative 'api/restaurant_api'
 require_relative 'api/rehab_api'
