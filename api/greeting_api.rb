@@ -4,10 +4,10 @@ require_relative 'model'
 require_relative '../api'
 
 module Plugin::TDR
-  class CharacterAPI
+  class GreetingAPI
     def initialize
-      @saved_tdl_character ||= []
-      @saved_tds_character ||= []
+      @saved_tdl_greeting ||= []
+      @saved_tds_greeting ||= []
     end
 
     def start
@@ -17,7 +17,6 @@ module Plugin::TDR
     end
 
     private
-    # グリーティングのアップデートを5分ごとに繰り返し実行
     def reserver
       Reserver.new(300) {
         fetch_tdl
@@ -26,104 +25,87 @@ module Plugin::TDR
       }
     end
 
-    # TDLのグリーティングの情報を取得
     def fetch_tdl
       Thread.new {
-        url = 'http://info.tokyodisneyresort.jp/rt/s/gps/tdl_index.html' +
-            '?nextUrl=http://info.tokyodisneyresort.jp/rt/s/realtime/tdl_greeting.html' +
-            '&lat=35.6329530&lng=139.8840280'
-        Plugin::TDR::API.get_content_with_redirection url
-      }.next { |response|
-        doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
-        doc.xpath('//article[@class="run clearfix greeting"]')
-      }.next { |doc|
+        url = 'http://www.tokyodisneyresort.jp/_/realtime/tdl_greeting.json'
+        res = Plugin::TDR::API.fetch url
         [Plugin::TDR::User.new(
-            name: '東京ディズニーランド キャラクターグリーティング',
-            profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
-        ), doc]
-      }.next { |park, doc|
-        msgs = []
-        if doc.empty?
-          msg = Plugin::TDR::Information.new(
-              name: '閉園',
-              text: 'ただいま東京ディズニーランドは、閉園しております。',
-              link: 'http://info.tokyodisneyresort.jp/s/calendar/tdl/',
-              created: Time.now,
-              modified: Time.now,
-              user: park)
-          msgs.push(msg)
-        else
-          msgs = create_message park, doc
-        end
-        msgs
-      }.next { |msgs|
-        Plugin.call :destroyed, @saved_tdl_character
+          name: 'ディズニーランド グリーティング',
+          profile_image_url: File.join(File.dirname(__FILE__), '../tdl.png')
+        ), res]
+      }.next { |park, res|
+        data = analyze_tdl res
+        msgs = create_message park, data
+        Plugin.call :destroyed, @saved_tdl_greeting
         Plugin.call :appear, msgs
-        Plugin.call :extract_receive_message, :mikutter_tdl_character, msgs
-        @saved_tdl_character = msgs
+        Plugin.call :extract_receive_message, :mikutter_tdl_greeting, msgs
+        @saved_tdl_greeting = msgs
       }.trap { |e| error e }
     end
 
-    # TDSのグリーティングの情報を取得
     def fetch_tds
       Thread.new {
-        url = 'http://info.tokyodisneyresort.jp/rt/s/gps/tds_index.html' +
-            '?nextUrl=http://info.tokyodisneyresort.jp/rt/s/realtime/tds_greeting.html' +
-            '&lat=35.6329527&lng=139.8840281'
-        Plugin::TDR::API.get_content_with_redirection url
-      }.next { |response|
-        doc = Nokogiri::HTML.parse(response, nil, 'utf-8')
-        doc.xpath('//article[@class="run clearfix greeting"]')
-      }.next { |doc|
+        url = 'http://www.tokyodisneyresort.jp/_/realtime/tds_greeting.json'
+        res = Plugin::TDR::API.fetch url
         [Plugin::TDR::User.new(
-            name: '東京ディズニーシー キャラクターグリーティング',
-            profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
-        ), doc]
-      }.next { |park, doc|
-        msgs = []
-        if doc.empty?
-          msg = Plugin::TDR::Information.new(
-              name: '閉園',
-              text: 'ただいま東京ディズニーシーは、閉園しております。',
-              link: 'http://info.tokyodisneyresort.jp/s/calendar/tds/',
-              created: Time.now,
-              modified: Time.now,
-              user: park
-          )
-          msgs.push(msg)
-        else
-          msgs = create_message park, doc
-        end
-        msgs
-      }.next { |msgs|
-        Plugin.call :destroyed, @saved_tds_character
+          name: 'ディズニーシー グリーティング',
+          profile_image_url: File.join(File.dirname(__FILE__), '../tds.png')
+        ), res]
+      }.next { |park, res|
+        data = analyze_tds res
+        msgs = create_message park, data
+        Plugin.call :destroyed, @saved_tds_greeting
         Plugin.call :appear, msgs
-        Plugin.call :extract_receive_message, :mikutter_tds_character, msgs
-        @saved_tds_character = msgs
+        Plugin.call :extract_receive_message, :mikutter_tds_greeting, msgs
+        @saved_tds_greeting = msgs
       }.trap { |e| error e }
     end
 
-    def create_message(park, doc)
-      doc.map.with_index do |character, i|
-        name = character.css('h3').text.gsub(/(\s)/, '')
-        wait_time = character.css('p.waitTime').text.gsub(/(\s)/, '')
-        op_left = character.css('div.op-left')
-        op_right = character.css('div.op-right')
-        op = op_left.zip(op_right).map{|left, right| "#{left.text.gsub(/(\s)/, '')}: #{right.text.gsub(/(\s)/, '')}"}.join("\n")
+    def analyze_tdl data
+      list = []
+      data['id11']['Facility'].each { |facility| list.push(facility['greeting']) }
+      data['id13']['Facility'].each { |facility| list.push(facility['greeting']) }
+      data['id16']['Facility'].each { |facility| list.push(facility['greeting']) }
+      list
+    end
+
+    def analyze_tds data
+      list = []
+      data['id21']['Facility'].each { |facility| list.push(facility['greeting']) }
+      data['id22']['Facility'].each { |facility| list.push(facility['greeting']) }
+      data['id25']['Facility'].each { |facility| list.push(facility['greeting']) }
+      data['id26']['Facility'].each { |facility| list.push(facility['greeting']) }
+      data['id27']['Facility'].each { |facility| list.push(facility['greeting']) }
+      list
+    end
+
+    def create_message park, data
+      data.map.with_index { |greeting, i|
+        name = greeting['FacilityName']
+        url = greeting['FacilityURLSP']
+        time = greeting['StandbyTime']
+        operatingHours = greeting['operatinghours']
+        update = greeting['UpdateTime']
+        operating = operatingHours.map { |item|
+          from = item['OperatingHoursFrom']
+          to = item['OperatingHoursTo']
+          status = item['OperatingStatus']
+          from.to_s + ' - ' + to.to_s + "\t" + status.to_s
+        }.join("\n")
         text = name
-        text = text + "\n待ち時間: " + wait_time unless wait_time.empty?
+        text += "\n" + operating
+        text += "\n" + time + ' 分' unless time.nil?
+        text += "\n" + '更新時間: ' + update
         msg = Plugin::TDR::Information.new(
-            name: name,
-            text: "#{text}\n#{op}",
-            created: Time.now,
-            modified: Time.now - i,
-            user: park
+          name: name,
+          text: text,
+          created: Time.now - i,
+          modified: Time.now,
+          user: park,
+          link: url
         )
-        unless character.css('a').empty?
-          msg.link = character.css('a').attribute('href')
-        end
-        msg
-      end
+      }
     end
   end
 end
+
