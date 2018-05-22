@@ -39,6 +39,8 @@ Plugin.create(:mikutter_tdr) do
     show.start
     greeting = Plugin::TDR::GreetingAPI.new
     greeting.start
+    restaurant = Plugin::TDR::RestaurantAPI.new
+    restaurant.start
     weather = Plugin::TDR::WeatherAPI.new
     weather.start
   end
