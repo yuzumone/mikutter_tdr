@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 module Plugin::TDR
-  class Information < Retriever::Model
-    include Retriever::Model::MessageMixin
+  class Information < Diva::Model
+    include Diva::Model::MessageMixin
 
     register :mikutter_tdr_information,
              name:'TDR情報',

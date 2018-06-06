@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 module Plugin::TDR
-  class User < Retriever::Model
-    include Retriever::Model::UserMixin
+  class User < Diva::Model
+    include Diva::Model::UserMixin
 
     field.string :name, required: true
     field.string :profile_image_url
