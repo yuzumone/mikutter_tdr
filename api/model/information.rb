@@ -17,6 +17,10 @@ module Plugin::TDR
     field.time   :modified
     field.has    :user, Plugin::TDR::User, required: true
 
+    def description
+      text
+    end
+
     def to_show
       text
     end
