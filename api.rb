@@ -25,7 +25,7 @@ module Plugin::TDR
         cookie.value = UserConfig[:mikutter_tdr_cookie_value]
         cookie.url = Addressable::URI.parse('https://www.tokyodisneyresort.jp/view_interface.php?blockId=94199&pageBlockId=13476&nextUrl=tdlattraction')
         client.cookie_manager.add cookie
-        res = client.get(url, :header => header)
+        res = client.get(url, :header => header, :follow_redirect => true)
         body = Zlib::GzipReader.new(StringIO.new(res.body.to_s)).read
         JSON.parse body
       end
