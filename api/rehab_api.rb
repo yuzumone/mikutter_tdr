@@ -20,7 +20,7 @@ module Plugin::TDR
           'Upgrade-Insecure-Requests' => '1',
           'Connection' => 'keep-alive'
       }
-      res = client.get(url, :header => header)
+      res = client.get(url, :header => header, follow_redirect => true)
       body = Zlib::GzipReader.new(StringIO.new(res.body.to_s)).read
       doc = Nokogiri::HTML.parse(body, nil, 'utf-8')
       doc.xpath('//*[@class="linkList6"]/ul/li')
