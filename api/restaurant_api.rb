@@ -77,11 +77,11 @@ module Plugin::TDR
         if min.nil? && max.nil?
           wait = nil
         elsif max.nil?
-          wait = min + '分以上'
+          wait = min.to_s + '分以上'
         elsif max == min
-          wait = min + '分'
+          wait = min.to_s + '分'
         else
-          wait = min + ' - ' + max + '分'
+          wait = min.to_s + ' - ' + max + '分'
         end
         text = name
         text += "\n" + operating unless operating.empty?
