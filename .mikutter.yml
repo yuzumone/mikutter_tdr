@@ -3,7 +3,7 @@ slug: :mikutter_tdr
 depends:
   mikutter: 3.6.8
   plugin: []
-version: '1.0.1'
+version: '1.0.2'
 author: yuzumone
 name: mikutter_tdr
 description: '夢の国の情報を表示'
