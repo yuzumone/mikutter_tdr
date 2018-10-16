@@ -92,7 +92,7 @@ module Plugin::TDR
           name: name,
           text: text,
           created: Time.now - i,
-          modified: Time.now,
+          modified: Time.parse(update),
           user: park,
           link: url
         )
