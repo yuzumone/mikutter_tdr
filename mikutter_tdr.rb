@@ -25,6 +25,18 @@ Plugin.create(:mikutter_tdr) do
     [datasources]
   }
 
+  defevent :tdr_show,  priority: :ui_passive, prototype: [Array]
+
+  on_tdr_show do |data|
+    # 5分毎に更新されるのでイベントも5分毎に飛んでくる
+    t = Time.now - 5 * 60
+    data.each do |show|
+      if show.modified > t
+        Plugin.call :fcm, show
+      end
+    end
+  end
+
   on_boot do
     d = UserConfig[:mikutter_tdr_cookie_date]
     last = Date.parse d unless d.nil?

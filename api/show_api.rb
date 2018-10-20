@@ -38,6 +38,7 @@ module Plugin::TDR
         Plugin.call :destroyed, @saved_tdl_show
         Plugin.call :appear, msgs
         Plugin.call :extract_receive_message, :mikutter_tdl_show, msgs
+        Plugin.call :tdr_show, msgs
         @saved_tdl_show = msgs
       }.trap { |e| error e }
     end
@@ -55,6 +56,7 @@ module Plugin::TDR
         Plugin.call :destroyed, @saved_tds_show
         Plugin.call :appear, msgs
         Plugin.call :extract_receive_message, :mikutter_tds_show, msgs
+        Plugin.call :tdr_show, msgs
         @saved_tds_show = msgs
       }.trap { |e| error e }
     end
