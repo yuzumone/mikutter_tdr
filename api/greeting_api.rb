@@ -86,12 +86,15 @@ module Plugin::TDR
         time = greeting['StandbyTime']
         operatingHours = greeting['operatinghours']
         update = greeting['UpdateTime']
-        operating = operatingHours.map { |item|
-          from = item['OperatingHoursFrom']
-          to = item['OperatingHoursTo']
-          status = item['OperatingStatus']
-          from.to_s + ' - ' + to.to_s + "\t" + status.to_s
-        }.join("\n")
+        operating = ''
+        unless operatingHours.nil?
+          operating = operatingHours.map { |item|
+            from = item['OperatingHoursFrom']
+            to = item['OperatingHoursTo']
+            status = item['OperatingStatus']
+            from.to_s + ' - ' + to.to_s + "\t" + status.to_s
+          }.join("\n")
+        end
         text = name
         text += "\n" + operating
         text += "\n" + time + ' 分' unless time.nil?
